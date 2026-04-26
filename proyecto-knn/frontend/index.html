@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Predicción de Intención de Voto - KNN</title>
+
+    <style>
+      /* ---------- RESET ---------- */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+
+      /* ---------- VARIABLES (colores) ---------- */
+      :root {
+        --bg: #0a0a0a;
+        --card: #111;
+        --muted: #bfcfc1;
+        --text: #e5e5e5;
+        --green-1: #27ae60;
+        --green-2: #2ecc71;
+        --accent-shadow: rgba(46, 204, 113, 0.45);
+        --border: #1d1d1d;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        padding: 18px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      /* ---------- HEADER ---------- */
+      .header {
+        text-align: center;
+        margin-bottom: 22px;
+      }
+
+      .header h1 {
+        color: var(--green-2);
+        font-size: clamp(1.6rem, 2.2vw, 2.6rem);
+        text-shadow: 0 0 12px var(--accent-shadow);
+        margin-bottom: 6px;
+      }
+
+      .header p {
+        color: #cfded0;
+        font-size: clamp(0.9rem, 1.2vw, 1.05rem);
+        opacity: 0.9;
+      }
+
+      /* ---------- API STATUS ---------- */
+      .api-status {
+        background: var(--card);
+        border: 1px solid var(--border);
+        padding: 12px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 16px 0;
+      }
+
+      .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+      .status-indicator.online {
+        background: var(--green-2);
+        box-shadow: 0 0 8px var(--accent-shadow);
+      }
+      .status-indicator.offline {
+        background: #e74c3c;
+      }
+
+      /* ---------- GRID LAYOUT ---------- */
+      .main-content {
+        display: grid;
+        grid-template-columns: 1fr 420px;
+        gap: 20px;
+        align-items: start;
+      }
+
+      /* On small screens use single column */
+      @media (max-width: 960px) {
+        .main-content {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ---------- CARD ---------- */
+      .card {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 20px;
+        border: 1px solid var(--border);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+      }
+
+      .card h2 {
+        color: var(--green-2);
+        margin-bottom: 14px;
+        font-size: 1.15rem;
+        border-bottom: 3px solid var(--green-1);
+        padding-bottom: 8px;
+      }
+
+      /* ---------- FORM GRID (responsive) ---------- */
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      @media (max-width: 720px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        color: #c7d8c6;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #333;
+        background: #181818;
+        color: var(--text);
+        font-size: 0.95rem;
+        transition: all 0.18s ease;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: var(--green-1);
+        box-shadow: 0 0 8px var(--accent-shadow);
+      }
+
+      /* smaller inputs on tiny screens */
+      @media (max-width: 420px) {
+        .form-group input,
+        .form-group select {
+          padding: 9px;
+          font-size: 0.92rem;
+        }
+      }
+
+      /* ---------- BUTTONS ---------- */
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 11px 14px;
+        border-radius: 10px;
+        border: none;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--green-1), var(--green-2));
+        color: #04120a;
+        box-shadow: 0 8px 22px rgba(46, 204, 113, 0.18);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(46, 204, 113, 0.28);
+      }
+
+      .btn-secondary {
+        background: #242424;
+        color: var(--text);
+        border: 1px solid #333;
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      /* ---------- LOADING ---------- */
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 12px;
+      }
+      .loading.show {
+        display: block;
+      }
+
+      .spinner {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 4px solid #2b2b2b;
+        border-top-color: var(--green-2);
+        animation: spin 1s linear infinite;
+        margin: 0 auto 8px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ---------- RESULTS (right column) ---------- */
+      .result-card {
+        width: 100%;
+      }
+      .prediction-result {
+        border-radius: 10px;
+        padding: 16px;
+        text-align: center;
+        color: #04210d;
+        background: linear-gradient(135deg, var(--green-1), var(--green-2));
+        box-shadow: 0 12px 30px rgba(46, 204, 113, 0.12);
+        margin-bottom: 12px;
+      }
+      .prediction-result .value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        letter-spacing: 0.6px;
+      }
+
+      .confidence {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-radius: 8px;
+        background: #101010;
+        border: 1px solid #222;
+        margin-bottom: 12px;
+      }
+      .confidence .label {
+        color: #cbdcc9;
+        font-weight: 600;
+      }
+      .confidence .value {
+        color: var(--green-2);
+        font-weight: 700;
+      }
+
+      .probabilities {
+        margin-top: 10px;
+        max-height: 42vh;
+        overflow: auto;
+        padding-right: 6px;
+      }
+      .probability-item {
+        margin-bottom: 12px;
+      }
+      .probability-label {
+        display: flex;
+        justify-content: space-between;
+        color: #d9e9d6;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .probability-bar {
+        height: 28px;
+        background: #232323;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .probability-fill {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      /* percentage text inside bar smaller on mobile */
+      @media (max-width: 420px) {
+        .probability-fill {
+          font-size: 0.82rem;
+          padding: 0 6px;
+        }
+      }
+
+      /* info section */
+      .info-section {
+        margin-top: 14px;
+        background: #0f0f0f;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #222;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      @media (max-width: 420px) {
+        .info-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        color: #cbdcc9;
+        font-weight: 600;
+      }
+
+      /* helper: make the right column stack on very small screens under form */
+      @media (max-width: 960px) {
+        .main-content {
+          grid-template-columns: 1fr;
+        }
+        .card {
+          padding: 18px;
+          border-radius: 12px;
+        }
+      }
+
+      /* accessibility: focus visible */
+      .btn:focus,
+      input:focus,
+      select:focus {
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1>Predicción de Intención de Voto</h1>
+        <p>Sistema de predicción basado en K-Nearest Neighbors (KNN)</p>
+      </header>
+
+      <div class="api-status" id="apiStatus">
+        <span class="status-indicator offline"></span>
+        <span>Verificando conexión con la API...</span>
+      </div>
+
+      <main class="main-content">
+        <!-- form (left) -->
+        <section class="card" aria-labelledby="formTitle">
+          <h2 id="formTitle">Datos del Votante</h2>
+
+          <form id="voterForm" autocomplete="off">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="age">Edad</label>
+                <input
+                  id="age"
+                  name="age"
+                  type="number"
+                  min="18"
+                  max="85"
+                  value="35"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="gender">Género</label>
+                <select id="gender" name="gender" required>
+                  <option value="0">Masculino</option>
+                  <option value="1" selected>Femenino</option>
+                  <option value="2">Otro</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="education">Nivel Educativo</label>
+                <select id="education" name="education" required>
+                  <option value="0">Sin estudios</option>
+                  <option value="1">Primaria</option>
+                  <option value="2">Secundaria</option>
+                  <option value="3" selected>Universidad</option>
+                  <option value="4">Posgrado</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="employment_status">Estado Laboral</label>
+                <select
+                  id="employment_status"
+                  name="employment_status"
+                  required
+                >
+                  <option value="0" selected>Empleado</option>
+                  <option value="1">Desempleado</option>
+                  <option value="2">Independiente</option>
+                  <option value="3">Informal</option>
+                  <option value="4">Estudiante</option>
+                  <option value="5">Jubilado</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="income_bracket">Rango de Ingresos</label>
+                <select id="income_bracket" name="income_bracket" required>
+                  <option value="0">0-1 SM</option>
+                  <option value="1">1-2 SM</option>
+                  <option value="2" selected>2-4 SM</option>
+                  <option value="3">4-8 SM</option>
+                  <option value="4">8+ SM</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="urbanicity">Tipo de Zona</label>
+                <select id="urbanicity" name="urbanicity" required>
+                  <option value="0">Rural</option>
+                  <option value="1" selected>Urbano</option>
+                  <option value="2">Periurbano</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="party_id_strength">Fuerza Partidista (0–4)</label>
+                <input
+                  id="party_id_strength"
+                  name="party_id_strength"
+                  type="number"
+                  min="0"
+                  max="4"
+                  value="2"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="voted_last">¿Votó en la última elección?</label>
+                <select id="voted_last" name="voted_last" required>
+                  <option value="0">No</option>
+                  <option value="1" selected>Sí</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="marital_status">Estado Civil</label>
+                <select id="marital_status" name="marital_status" required>
+                  <option value="0">Soltero</option>
+                  <option value="1" selected>Casado</option>
+                  <option value="2">Divorciado</option>
+                  <option value="3">Viudo</option>
+                  <option value="4">Unión libre</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="household_size">Tamaño del Hogar</label>
+                <input
+                  id="household_size"
+                  name="household_size"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value="3"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="has_children">¿Tiene hijos?</label>
+                <select id="has_children" name="has_children" required>
+                  <option value="0">No</option>
+                  <option value="1" selected>Sí</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="region">Región</label>
+                <select id="region" name="region" required>
+                  <option value="0">Norte</option>
+                  <option value="1" selected>Sur</option>
+                  <option value="2">Centro</option>
+                  <option value="3">Oriente</option>
+                  <option value="4">Occidente</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="button-group" style="margin-top: 14px">
+              <button type="submit" id="predictBtn" class="btn btn-primary">
+                Predecir
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="resetForm()"
+              >
+                Limpiar
+              </button>
+            </div>
+          </form>
+
+          <div id="loading" class="loading" aria-hidden="true">
+            <div class="spinner" role="status" aria-label="Cargando"></div>
+            <p style="text-align: center; color: #bfcfc1; margin-top: 8px">
+              Procesando predicción...
+            </p>
+          </div>
+        </section>
+
+        <!-- results (right) -->
+        <aside
+          class="card result-card"
+          id="resultsCard"
+          aria-labelledby="resultsTitle"
+          style="display: block"
+        >
+          <h2 id="resultsTitle">Resultados de la Predicción</h2>
+
+          <div class="prediction-result" aria-live="polite">
+            <h3 style="margin: 0 0 6px 0; color: #04210d">
+              Intención de Voto Predicha
+            </h3>
+            <div class="value" id="predictedVote">-</div>
+          </div>
+
+          <div class="confidence" role="status">
+            <div class="label">Nivel de Confianza</div>
+            <div class="value confidence-value" id="confidenceValue">-</div>
+          </div>
+
+          <div
+            class="probabilities"
+            id="probabilitiesContainer"
+            aria-label="Probabilidades por candidato"
+          >
+            <!-- prob items se inyectan desde JS -->
+          </div>
+
+          <div
+            class="info-section"
+            aria-hidden="false"
+            style="margin-top: 14px"
+          >
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Algoritmo:</span
+                ><span class="info-value">KNN</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">K óptimo:</span
+                ><span class="info-value" id="bestK">-</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Accuracy:</span
+                ><span class="info-value" id="modelAccuracy">-</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Distancia:</span
+                ><span class="info-value">Euclidiana</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:8000";
+
+      async function checkAPIStatus() {
+        const indicator = document.querySelector(".status-indicator");
+        const apiStatusEl = document.getElementById("apiStatus");
+        const text = apiStatusEl
+          ? apiStatusEl.querySelector("span:last-child")
+          : null;
+
+        try {
+          const r = await fetch(`${API_URL}/health`);
+          const data = await r.json();
+
+          if (data.status === "healthy") {
+            indicator.classList.add("online");
+            indicator.classList.remove("offline");
+            if (text) text.textContent = "API conectada";
+            getModelInfo();
+          } else {
+            if (text) text.textContent = "API en entrenamiento...";
+          }
+        } catch (err) {
+          if (text) text.textContent = "No se puede conectar con la API";
+          indicator.classList.remove("online");
+          indicator.classList.add("offline");
+          console.error("API status error:", err);
+        }
+      }
+
+      async function getModelInfo() {
+        try {
+          const r = await fetch(`${API_URL}/info`);
+          const data = await r.json();
+          if (data && data.accuracy !== undefined) {
+            document.getElementById("modelAccuracy").textContent =
+              (data.accuracy * 100).toFixed(2) + "%";
+            document.getElementById("bestK").textContent = data.best_k ?? "-";
+          }
+        } catch (e) {
+          console.warn("No se pudo obtener info del modelo:", e);
+        }
+      }
+
+      document
+        .getElementById("voterForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const form = e.target;
+          const formData = new FormData(form);
+          const data = {};
+          formData.forEach((v, k) => {
+            const num = Number(v);
+            data[k] =
+              !isNaN(num) && v !== ""
+                ? v.includes(".")
+                  ? parseFloat(v)
+                  : parseInt(v)
+                : v;
+          });
+
+          // show loader
+          document.getElementById("loading").classList.add("show");
+          document.getElementById("predictBtn").disabled = true;
+          document.getElementById("resultsCard").classList.remove("show");
+
+          try {
+            const response = await fetch(`${API_URL}/predecir`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+            if (!response.ok) throw new Error("Error en la petición");
+            const result = await response.json();
+            displayResults(result);
+          } catch (err) {
+            alert("Error al predecir. Revisa la consola.");
+            console.error(err);
+          } finally {
+            document.getElementById("loading").classList.remove("show");
+            document.getElementById("predictBtn").disabled = false;
+          }
+        });
+
+      function displayResults(result) {
+        document.getElementById("predictedVote").textContent =
+          result.prediccion ?? "-";
+        document.getElementById("confidenceValue").textContent =
+          ((result.confianza ?? 0) * 100).toFixed(2) + "%";
+        document.getElementById("bestK").textContent = result.mejor_k ?? "-";
+        document.getElementById("modelAccuracy").textContent = result.accuracy
+          ? (result.accuracy * 100).toFixed(2) + "%"
+          : document.getElementById("modelAccuracy").textContent;
+
+        const container = document.getElementById("probabilitiesContainer");
+        container.innerHTML = "";
+
+        // Ordenar por prob descendente para mejor visual
+        const probs = result.probabilidades ?? {};
+        const sorted = Object.entries(probs).sort((a, b) => b[1] - a[1]);
+
+        sorted.forEach(([label, p]) => {
+          const pct = Math.round(p * 10000) / 100; // 2 dec
+          const item = document.createElement("div");
+          item.className = "probability-item";
+          item.innerHTML = `
+            <div class="probability-label"><span>${label}</span><span>${pct}%</span></div>
+            <div class="probability-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
+              <div class="probability-fill" style="width:${pct}%;">${pct}%</div>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+
+        // mostrar resultados y hacer scroll suave (si está en mobile)
+        const resultsCard = document.getElementById("resultsCard");
+        resultsCard.classList.add("show");
+        resultsCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      function resetForm() {
+        document.getElementById("voterForm").reset();
+        document.getElementById("resultsCard").classList.remove("show");
+      }
+
+      // inicializar
+      checkAPIStatus();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,53 @@
+# ════════════════════════════════════════════════════════════
+# DOCKERFILE - FRONTEND (React + Vite)
+# Ubicación: frontend/Dockerfile.prod
+# Descripción: Build para producción con Nginx
+# ════════════════════════════════════════════════════════════
+
+# ETAPA 1: Build
+# ════════════════════════════════════════════════════════════
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm install
+
+# Copiar código fuente
+COPY . .
+
+# Build de la aplicación
+RUN npm run build
+
+# ════════════════════════════════════════════════════════════
+# ETAPA 2: Producción
+# ════════════════════════════════════════════════════════════
+FROM nginx:alpine
+
+# Eliminar configuración por defecto de nginx
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copiar configuración personalizada de nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copiar archivos compilados desde la etapa anterior
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Exponer puerto
+EXPOSE 80
+
+# Comando de inicio
+CMD ["nginx", "-g", "daemon off;"]
+
+# ════════════════════════════════════════════════════════════
+# NOTAS:
+# ════════════════════════════════════════════════════════════
+# 1. Este Dockerfile es para PRODUCCIÓN
+# 2. Para desarrollo, usa: npm run dev
+# 3. El build se ejecuta en la etapa 1 (builder)
+# 4. Solo la aplicación compilada se copia a nginx (etapa 2)
+# 5. Tamaño de imagen final: ~50MB
+# ════════════════════════════════════════════════════════════

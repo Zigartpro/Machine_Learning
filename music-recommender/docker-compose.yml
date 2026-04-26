@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    container_name: music-recommender-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./dataset_canciones_colombia_knn.csv:/app/dataset_canciones_colombia_knn.csv
+    environment:
+      - CSV_PATH=/app/dataset_canciones_colombia_knn.csv
+    networks:
+      - music-network
+
+  frontend:
+    build: ./frontend
+    container_name: music-recommender-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - music-network
+
+networks:
+  music-network:
+    driver: bridge
