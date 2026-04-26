@@ -1,4 +1,4 @@
-const API = "http://localhost:8000";
+const API = "https://hospitales-backend.onrender.com";
 let currentHouses = [];
 let hospitalPositions = [];
 
