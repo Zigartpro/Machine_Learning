@@ -1,0 +1,54 @@
+body {
+  font-family: 'Inter', Arial, sans-serif;
+  background: linear-gradient(135deg,#74ebd5,#acb6e5);
+  margin: 0;
+  padding: 20px;
+  color: #333;
+}
+
+.container {
+  max-width: 1050px;
+  margin: auto;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+h1 { margin-bottom: 20px; font-weight: 700; color: #1a1a1a; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
+
+.controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 20px; }
+.controls label { display: flex; align-items: center; font-weight: 500; }
+.controls input { width: 70px; margin-left: 6px; padding: 4px 6px; border-radius: 6px; border: 1px solid #ccc; }
+
+.btn { padding: 8px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+.btn.primary { background: #4caf50; color: white; }
+.btn.primary:hover { background: #43a047; transform: translateY(-2px); }
+.btn.secondary { background: #2196f3; color: white; }
+.btn.secondary:hover { background: #1e88e5; transform: translateY(-2px); }
+
+.status { margin-bottom: 18px; font-weight: 500; color: #555; min-height: 24px; }
+#canvasArea { position: relative; margin-top: 20px; text-align: center; }
+#mapCanvas { border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.15); background: rgba(255,255,255,0.05); cursor: crosshair; }
+.tooltip {
+  position: absolute;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+  font-size: 12px;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.results { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 20px; }
+.result-card { display: flex; flex-direction: column; align-items: center; padding: 14px 18px; border-radius: 12px; background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); min-width: 140px; transition: all 0.3s ease; }
+.result-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.3); }
+.result-card h3 { margin: 0 0 6px 0; font-size: 16px; }
+.result-card p { margin: 0; font-size: 14px; font-weight: 600; }
+.result-card.success { border-left: 4px solid #4caf50; }
+.result-card.warning { border-left: 4px solid #ff9800; }
+.result-card.info { border-left: 4px solid #2196f3; }

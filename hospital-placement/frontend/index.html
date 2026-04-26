@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Ubicación Óptima de Hospitales</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <h1> Ubicación Óptima de Hospitales (Dashboard)</h1>
+
+    <div class="controls">
+      <label>Filas (m): <input id="m" type="number" value="50"></label>
+      <label>Columnas (n): <input id="n" type="number" value="50"></label>
+      <label>Casas: <input id="num_houses" type="number" value="200"></label>
+      <label>Hospitales (k): <input id="k" type="number" value="5"></label>
+      <label>Max iters: <input id="max_iters" type="number" value="50"></label>
+      <button id="genBtn" class="btn primary">Generar casas </button>
+      <button id="placeBtn" class="btn secondary" disabled>Optimizar hospitales </button>
+    </div>
+
+    <div id="status" class="status">Introduce los parámetros y genera casas.</div>
+
+    <div id="canvasArea">
+      <canvas id="mapCanvas" width="800" height="800"></canvas>
+      <div id="tooltip" class="tooltip" style="display:none;"></div>
+    </div>
+
+    <div id="results" class="results"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

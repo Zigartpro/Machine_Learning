@@ -1,0 +1,14 @@
+version: '3.9'
+services:
+  backend:
+    build: ./backend
+    container_name: hospital_backend
+    ports:
+      - "8000:8000"
+  frontend:
+    image: nginx:alpine
+    container_name: hospital_frontend
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
