@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Music, Star, TrendingUp, Search, Sparkles } from "lucide-react";
 
-const API_URL = "/api";
+const API_URL = "https://music-recommender-api-pxhn.onrender.com/api";
 
 export default function App() {
   const [canciones, setCanciones] = useState({});
@@ -57,7 +57,7 @@ export default function App() {
 
     if (busqueda) {
       todas = todas.filter((c) =>
-        c.nombre.toLowerCase().includes(busqueda.toLowerCase())
+        c.nombre.toLowerCase().includes(busqueda.toLowerCase()),
       );
     }
 
@@ -159,7 +159,7 @@ export default function App() {
                         <p className="text-white font-medium">{nombre}</p>
                         <span
                           className={`inline-block px-2 py-1 rounded-full text-xs text-white mt-1 ${colorGenero(
-                            genero
+                            genero,
                           )}`}
                         >
                           {genero}
@@ -240,7 +240,7 @@ export default function App() {
                             </p>
                             <span
                               className={`inline-block px-2 py-0.5 rounded-full text-xs text-white mt-1 ${colorGenero(
-                                rec.genero
+                                rec.genero,
                               )}`}
                             >
                               {rec.genero}
